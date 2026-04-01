@@ -1,0 +1,266 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HabitCategory {
+  WORK
+  PERSONAL
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  ALTERNATING
+}
+
+enum TrackingType {
+  BOOLEAN
+  QUANTITY
+}
+
+enum ReminderFrequency {
+  DAILY
+  EVERY_OTHER_DAY
+  WEEKLY
+  CUSTOM
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum WeightUnit {
+  KG
+  LBS
+}
+
+enum UnlockType {
+  BADGE
+  TITLE
+  FEATURE
+  THEME
+}
+
+enum BonusType {
+  STREAK_3
+  STREAK_7
+  STREAK_14
+  STREAK_30
+  STREAK_100
+  PERFECT_DAY
+  PERFECT_WEEK
+  EARLY_BIRD
+  CONSISTENCY
+  TARGET_MET
+  TARGET_EXCEEDED
+  PERSONAL_BEST
+}
+
+model User {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  level           Int      @default(1)
+  totalXp         Int      @default(0)
+  spendableXp     Int      @default(0)
+  currentSeasonXp Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  credentials       Credential[]
+  habits            Habit[]
+  completions       HabitCompletion[]
+  streaks           Streak[]
+  rewards           Reward[]
+  unlocks           Unlock[]
+  quotes            BookQuote[]
+  pushSubscriptions PushSubscription[]
+  mealLogs          MealLog[]
+  checkIns          DailyCheckIn[]
+  weeklyReports     WeeklyReport[]
+}
+
+model Credential {
+  id         String   @id
+  userId     String
+  publicKey  Bytes
+  counter    BigInt
+  transports String[]
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id                String         @id @default(uuid())
+  userId            String
+  name              String
+  description       String?
+  category          HabitCategory
+  frequency         HabitFrequency
+  scheduledDays     Int[]
+  scheduledTime     String?
+  trackingType      TrackingType   @default(BOOLEAN)
+  quantityUnit      String?
+  quantityTarget    Int?
+  alternateGroupId  String?
+  alternatePosition Int?
+  xpReward          Int            @default(10)
+  isActive          Boolean        @default(true)
+  calendarEventUid  String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions HabitCompletion[]
+  streak      Streak?
+}
+
+model HabitCompletion {
+  id          String     @id @default(uuid())
+  habitId     String
+  userId      String
+  completedAt DateTime   @default(now())
+  quantity    Int?
+  xpEarned    Int
+  bonusType   BonusType?
+  notes       String?
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Streak {
+  id                String    @id @default(uuid())
+  habitId           String    @unique
+  userId            String
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Reward {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  cost        Int
+  category    String?
+  isRedeemed  Boolean   @default(false)
+  redeemedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Unlock {
+  id          String     @id @default(uuid())
+  userId      String
+  type        UnlockType
+  name        String
+  description String
+  condition   Json
+  unlockedAt  DateTime?
+  iconUrl     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BookQuote {
+  id                 String            @id @default(uuid())
+  userId             String
+  bookTitle          String
+  author             String?
+  quote              String
+  chapter            String?
+  reminderFrequency  ReminderFrequency
+  customIntervalDays Int?
+  nextReminderAt     DateTime
+  isActive           Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealLog {
+  id                String   @id @default(uuid())
+  userId            String
+  mealType          MealType
+  description       String
+  estimatedCalories Int
+  estimatedProtein  Float?
+  estimatedCarbs    Float?
+  estimatedFat      Float?
+  aiNotes           String?
+  loggedAt          DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyCheckIn {
+  id            String     @id @default(uuid())
+  userId        String
+  date          DateTime   @db.Date
+  weight        Float?
+  weightUnit    WeightUnit @default(KG)
+  mood          Int?
+  tiredness     Int?
+  sleepHours    Float?
+  energyLevel   Int?
+  notes         String?
+  totalCalories Int?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model WeeklyReport {
+  id                   String   @id @default(uuid())
+  userId               String
+  weekStartDate        DateTime @db.Date
+  weekEndDate          DateTime @db.Date
+  habitsCompleted      Int
+  habitsTotal          Int
+  completionPercentage Float
+  totalXpEarned        Int
+  avgCalories          Float?
+  avgMood              Float?
+  avgTiredness         Float?
+  avgEnergy            Float?
+  avgSleepHours        Float?
+  weightStart          Float?
+  weightEnd            Float?
+  weightChange         Float?
+  highlights           Json
+  pdfUrl               String?
+  generatedAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
