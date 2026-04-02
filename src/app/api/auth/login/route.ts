@@ -1,35 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateAuthenticationOptions } from '@simplewebauthn/server'
+import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getSession, rpID } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}))
-  const { email } = body as { email?: string }
+  const { password } = await req.json()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let allowCredentials: any[] = []
-
-  if (email) {
-    const user = await prisma.user.findUnique({ where: { email } })
-    if (user) {
-      const creds = await prisma.credential.findMany({ where: { userId: user.id } })
-      allowCredentials = creds.map((c) => ({
-        id: c.id,
-        type: 'public-key' as const,
-      }))
-    }
+  if (!password || password !== process.env.APP_PASSWORD) {
+    return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
-  const options = await generateAuthenticationOptions({
-    rpID,
-    allowCredentials,
-    userVerification: 'preferred',
-  })
+  const user = await prisma.user.findFirst()
+  if (!user) {
+    return NextResponse.json({ error: 'No user found' }, { status: 500 })
+  }
 
   const session = await getSession()
-  session.challenge = options.challenge
+  session.userId = user.id
+  session.userName = user.name ?? undefined
+  session.userLevel = user.level
   await session.save()
 
-  return NextResponse.json(options)
+  return NextResponse.json({ success: true })
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import StatPanel from '@/components/ui/StatPanel'
 import DataTable from '@/components/ui/DataTable'
 import Modal from '@/components/ui/Modal'
@@ -15,6 +16,8 @@ interface Habit {
   trackingType: 'BOOLEAN' | 'QUANTITY'
   quantityUnit: string | null
   quantityTarget: number | null
+  quantityUnit2: string | null
+  quantityTarget2: number | null
   xpReward: number
   scheduledDays: number[]
   scheduledTime: string | null
@@ -77,7 +80,15 @@ export default function HabitsPage() {
   }
 
   const columns = [
-    { key: 'name', label: 'Habit' },
+    {
+      key: 'name',
+      label: 'Habit',
+      render: (h: Habit) => (
+        <Link href={`/habits/${h.id}`} className="text-blue-300 hover:text-fm-gold transition-colors font-medium">
+          {h.name}
+        </Link>
+      ),
+    },
     {
       key: 'category',
       label: 'Category',
@@ -96,7 +107,9 @@ export default function HabitsPage() {
       key: 'trackingType',
       label: 'Type',
       render: (h: Habit) =>
-        h.trackingType === 'BOOLEAN' ? '✓ Check-off' : `# ${h.quantityUnit || 'qty'}`,
+        h.trackingType === 'BOOLEAN'
+          ? '✓ Check-off'
+          : `# ${h.quantityUnit || 'qty'}${h.quantityUnit2 ? ` + ${h.quantityUnit2}` : ''}`,
     },
     {
       key: 'xpReward',
@@ -169,6 +182,8 @@ export default function HabitsPage() {
               trackingType: editingHabit.trackingType,
               quantityUnit: editingHabit.quantityUnit || '',
               quantityTarget: editingHabit.quantityTarget?.toString() || '',
+              quantityUnit2: editingHabit.quantityUnit2 || '',
+              quantityTarget2: editingHabit.quantityTarget2?.toString() || '',
               xpReward: editingHabit.xpReward.toString(),
             }}
             isEditing

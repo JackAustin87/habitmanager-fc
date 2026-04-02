@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const body = await req.json().catch(() => ({}))
-  const { quantity, notes } = body as { quantity?: number; notes?: string }
+  const { quantity, quantity2, notes } = body as { quantity?: number; quantity2?: number; notes?: string }
 
   let personalBest: number | undefined
   if (habit.trackingType === 'QUANTITY') {
@@ -38,7 +38,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     personalBest
   )
 
-  // Map xp.ts bonus strings to Prisma BonusType enum values
   let bonusType: BonusType | null = null
   if (rawBonusType === 'PB_BONUS' || rawBonusType === 'PERSONAL_BEST') {
     bonusType = BonusType.PERSONAL_BEST
@@ -51,6 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       habitId: habit.id,
       userId: session.userId,
       quantity: quantity ?? null,
+      quantity2: quantity2 ?? null,
       xpEarned,
       bonusType: bonusType,
       notes: notes ?? null,

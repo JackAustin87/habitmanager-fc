@@ -11,6 +11,8 @@ interface HabitItem {
   trackingType: string
   quantityTarget: number | null
   quantityUnit: string | null
+  quantityUnit2: string | null
+  quantityTarget2: number | null
   completedToday: boolean
   completedAt: string | null
 }
@@ -39,6 +41,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
   const [xpFlash, setXpFlash] = useState<{ id: string; xp: number } | null>(null)
+  const [pendingQuantity, setPendingQuantity] = useState<string | null>(null)
+  const [quantityInputs, setQuantityInputs] = useState<{ [id: string]: { q1: string; q2: string } }>({})
 
   const fetchDashboard = useCallback(async () => {
     const res = await fetch('/api/dashboard')
@@ -52,11 +56,24 @@ export default function DashboardPage() {
     fetchDashboard()
   }, [fetchDashboard])
 
-  async function handleComplete(habit: HabitItem) {
+  async function handleComplete(habit: HabitItem, q1?: number, q2?: number) {
     if (habit.completedToday || completing === habit.id) return
     setCompleting(habit.id)
+    setPendingQuantity(null)
+    setQuantityInputs(prev => {
+      const next = { ...prev }
+      delete next[habit.id]
+      return next
+    })
     try {
-      const res = await fetch(`/api/habits/${habit.id}/complete`, { method: 'POST' })
+      const body: Record<string, unknown> = {}
+      if (q1 !== undefined) body.quantity = q1
+      if (q2 !== undefined) body.quantity2 = q2
+      const res = await fetch(`/api/habits/${habit.id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
       if (res.ok) {
         const result = await res.json()
         setXpFlash({ id: habit.id, xp: result.xpEarned })
@@ -65,6 +82,15 @@ export default function DashboardPage() {
       }
     } finally {
       setCompleting(null)
+    }
+  }
+
+  function handleCompleteClick(habit: HabitItem) {
+    if (habit.trackingType === 'QUANTITY') {
+      setPendingQuantity(habit.id)
+      setQuantityInputs(prev => ({ ...prev, [habit.id]: { q1: '', q2: '' } }))
+    } else {
+      handleComplete(habit)
     }
   }
 
@@ -117,47 +143,102 @@ export default function DashboardPage() {
             {data.habits.map((habit) => (
               <div
                 key={habit.id}
-                className={`flex items-center justify-between px-4 py-3 transition-colors ${
+                className={`px-4 py-3 transition-colors ${
                   habit.completedToday ? 'bg-green-900/20' : 'hover:bg-blue-800/20'
                 }`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    {habit.completedToday && (
-                      <span className="text-fm-green text-lg">&#10003;</span>
-                    )}
-                    <span className={`font-medium text-sm ${habit.completedToday ? 'text-fm-green' : 'text-white'}`}>
-                      {habit.name}
-                    </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {habit.completedToday && (
+                        <span className="text-fm-green text-lg">&#10003;</span>
+                      )}
+                      <span className={`font-medium text-sm ${habit.completedToday ? 'text-fm-green' : 'text-white'}`}>
+                        {habit.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-blue-400 text-xs">{habit.category}</span>
+                      {habit.trackingType === 'QUANTITY' && habit.quantityUnit && (
+                        <span className="text-blue-400 text-xs">
+                          &middot; {habit.quantityUnit}
+                          {habit.quantityTarget ? ` (target: ${habit.quantityTarget})` : ''}
+                          {habit.quantityUnit2 ? ` + ${habit.quantityUnit2}` : ''}
+                        </span>
+                      )}
+                      <span className="text-fm-gold text-xs">+{habit.xpReward} XP</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-blue-400 text-xs">{habit.category}</span>
-                    {habit.trackingType === 'QUANTITY' && habit.quantityTarget && (
-                      <span className="text-blue-400 text-xs">
-                        &middot; {habit.quantityTarget} {habit.quantityUnit}
+                  <div className="ml-3 relative">
+                    {xpFlash?.id === habit.id && (
+                      <span className="absolute -top-6 right-0 text-fm-gold text-xs font-bold animate-bounce">
+                        +{xpFlash.xp} XP!
                       </span>
                     )}
-                    <span className="text-fm-gold text-xs">+{habit.xpReward} XP</span>
+                    {!habit.completedToday ? (
+                      completing === habit.id ? (
+                        <span className="text-gray-400 text-xs">Saving...</span>
+                      ) : pendingQuantity === habit.id ? null : (
+                        <button
+                          onClick={() => handleCompleteClick(habit)}
+                          className="bg-fm-gold text-fm-navy px-3 py-1.5 rounded text-xs font-bold hover:bg-yellow-400 transition-colors"
+                        >
+                          COMPLETE
+                        </button>
+                      )
+                    ) : (
+                      <span className="text-fm-green text-xs font-semibold">DONE</span>
+                    )}
                   </div>
                 </div>
-                <div className="ml-3 relative">
-                  {xpFlash?.id === habit.id && (
-                    <span className="absolute -top-6 right-0 text-fm-gold text-xs font-bold animate-bounce">
-                      +{xpFlash.xp} XP!
-                    </span>
-                  )}
-                  {!habit.completedToday ? (
+
+                {pendingQuantity === habit.id && (
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder={habit.quantityUnit || 'qty'}
+                      value={quantityInputs[habit.id]?.q1 || ''}
+                      onChange={e => setQuantityInputs(prev => ({
+                        ...prev,
+                        [habit.id]: { ...prev[habit.id], q1: e.target.value },
+                      }))}
+                      className="w-24 bg-blue-950 border border-blue-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-fm-gold"
+                      autoFocus
+                    />
+                    {habit.quantityUnit2 && (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder={habit.quantityUnit2}
+                        value={quantityInputs[habit.id]?.q2 || ''}
+                        onChange={e => setQuantityInputs(prev => ({
+                          ...prev,
+                          [habit.id]: { ...prev[habit.id], q2: e.target.value },
+                        }))}
+                        className="w-24 bg-blue-950 border border-blue-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-fm-gold"
+                      />
+                    )}
                     <button
-                      onClick={() => handleComplete(habit)}
-                      disabled={completing === habit.id}
-                      className="bg-fm-gold text-fm-navy px-3 py-1.5 rounded text-xs font-bold hover:bg-yellow-400 disabled:opacity-50 transition-colors"
+                      onClick={() => handleComplete(
+                        habit,
+                        quantityInputs[habit.id]?.q1 ? Number(quantityInputs[habit.id].q1) : undefined,
+                        quantityInputs[habit.id]?.q2 ? Number(quantityInputs[habit.id].q2) : undefined,
+                      )}
+                      className="bg-fm-gold text-fm-navy px-3 py-1 rounded text-xs font-bold hover:bg-yellow-400 transition-colors"
                     >
-                      {completing === habit.id ? '...' : 'COMPLETE'}
+                      DONE
                     </button>
-                  ) : (
-                    <span className="text-fm-green text-xs font-semibold">DONE</span>
-                  )}
-                </div>
+                    <button
+                      onClick={() => setPendingQuantity(null)}
+                      className="text-gray-400 text-xs hover:text-gray-200 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -12,9 +12,10 @@ export const sessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'hmfc-session',
   cookieOptions: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     httpOnly: true,
-    sameSite: 'strict' as const,
+    sameSite: 'lax' as const,
+    maxAge: 60 * 60 * 24 * 30,
   },
 }
 

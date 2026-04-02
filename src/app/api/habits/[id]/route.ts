@@ -25,8 +25,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(body.scheduledDays && { scheduledDays: body.scheduledDays }),
       ...(body.scheduledTime !== undefined && { scheduledTime: body.scheduledTime }),
       ...(body.trackingType && { trackingType: body.trackingType }),
-      ...(body.quantityUnit !== undefined && { quantityUnit: body.quantityUnit }),
+      ...(body.quantityUnit !== undefined && { quantityUnit: body.quantityUnit || null }),
       ...(body.quantityTarget !== undefined && { quantityTarget: body.quantityTarget ? Number(body.quantityTarget) : null }),
+      ...(body.quantityUnit2 !== undefined && { quantityUnit2: body.quantityUnit2 || null }),
+      ...(body.quantityTarget2 !== undefined && { quantityTarget2: body.quantityTarget2 ? Number(body.quantityTarget2) : null }),
       ...(body.xpReward !== undefined && { xpReward: Number(body.xpReward) }),
     },
   })

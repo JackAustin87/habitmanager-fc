@@ -112,6 +112,8 @@ model Habit {
   trackingType      TrackingType   @default(BOOLEAN)
   quantityUnit      String?
   quantityTarget    Int?
+  quantityUnit2     String?
+  quantityTarget2   Float?
   alternateGroupId  String?
   alternatePosition Int?
   xpReward          Int            @default(10)
@@ -130,7 +132,8 @@ model HabitCompletion {
   habitId     String
   userId      String
   completedAt DateTime   @default(now())
-  quantity    Int?
+  quantity    Float?
+  quantity2   Float?
   xpEarned    Int
   bonusType   BonusType?
   notes       String?
@@ -222,19 +225,20 @@ model MealLog {
 }
 
 model DailyCheckIn {
-  id            String     @id @default(uuid())
-  userId        String
-  date          DateTime   @db.Date
-  weight        Float?
-  weightUnit    WeightUnit @default(KG)
-  mood          Int?
-  tiredness     Int?
-  sleepHours    Float?
-  energyLevel   Int?
-  notes         String?
-  totalCalories Int?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id               String     @id @default(uuid())
+  userId           String
+  date             DateTime   @db.Date
+  weight           Float?
+  weightUnit       WeightUnit @default(KG)
+  mood             Int?
+  tiredness        Int?
+  sleepHours       Float?
+  energyLevel      Int?
+  restingHeartRate Int?
+  notes            String?
+  totalCalories    Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

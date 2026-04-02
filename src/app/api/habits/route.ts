@@ -38,7 +38,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { name, description, category, frequency, scheduledDays, scheduledTime, trackingType, quantityUnit, quantityTarget, xpReward } = body
+  const {
+    name, description, category, frequency, scheduledDays, scheduledTime,
+    trackingType, quantityUnit, quantityTarget, quantityUnit2, quantityTarget2, xpReward,
+  } = body
 
   if (!name || !category || !frequency) {
     return NextResponse.json({ error: 'Name, category, and frequency are required' }, { status: 400 })
@@ -56,6 +59,8 @@ export async function POST(req: NextRequest) {
       trackingType: trackingType || 'BOOLEAN',
       quantityUnit: quantityUnit || null,
       quantityTarget: quantityTarget ? Number(quantityTarget) : null,
+      quantityUnit2: quantityUnit2 || null,
+      quantityTarget2: quantityTarget2 ? Number(quantityTarget2) : null,
       xpReward: xpReward ? Number(xpReward) : 10,
     },
   })

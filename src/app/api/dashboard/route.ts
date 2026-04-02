@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const todayIndex = new Date().getDay() // 0 = Sunday, 1 = Monday, ...
+  const todayIndex = new Date().getDay()
 
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
@@ -51,6 +51,8 @@ export async function GET() {
     trackingType: h.trackingType,
     quantityTarget: h.quantityTarget,
     quantityUnit: h.quantityUnit,
+    quantityUnit2: h.quantityUnit2,
+    quantityTarget2: h.quantityTarget2,
     completedToday: h.completions.length > 0,
     completedAt: h.completions[0]?.completedAt ?? null,
   }))

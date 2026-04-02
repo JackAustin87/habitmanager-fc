@@ -28,12 +28,9 @@ export default function Home() {
             className="block w-full py-3 px-4 rounded text-sm font-semibold text-center transition-opacity hover:opacity-90"
             style={{ backgroundColor: '#d69e2e', color: '#1a2236' }}
           >
-            Sign In with Face ID
+            Sign In
           </Link>
         </div>
-        <p className="mt-4 text-xs" style={{ color: '#718096' }}>
-          First time? You will be prompted to register.
-        </p>
       </div>
     </main>
   )

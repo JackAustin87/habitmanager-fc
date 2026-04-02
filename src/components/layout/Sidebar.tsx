@@ -10,7 +10,7 @@ const navItems = [
   { href: '/league', label: 'League Table' },
   { href: '/transfers', label: 'Transfer Market' },
   { href: '/nutrition', label: 'Nutrition' },
-  { href: '/checkin', label: 'Check-In' },
+  { href: '/check-in', label: 'Check-In' },
   { href: '/analytics', label: 'Analytics' },
   { href: '/quotes', label: 'Book Quotes' },
   { href: '/trophies', label: 'Trophies' },
