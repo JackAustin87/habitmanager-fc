@@ -5,3 +5,19 @@ fmhabittracker.cloud {
         output stdout
     }
 }
+
+anytimecoach.app, www.anytimecoach.app {
+    reverse_proxy 172.18.0.1:8080
+    encode gzip
+    log {
+        output stdout
+    }
+}
+
+app.anytimecoach.app {
+    reverse_proxy 172.18.0.1:3001
+    encode gzip
+    log {
+        output stdout
+    }
+}

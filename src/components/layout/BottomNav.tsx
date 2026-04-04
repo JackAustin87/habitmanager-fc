@@ -8,6 +8,7 @@ const navItems = [
   { href: '/habits', label: 'Habits' },
   { href: '/check-in', label: 'Check-In' },
   { href: '/league', label: 'League' },
+  { href: '/cup', label: 'Cup' },
   { href: '/settings', label: 'Settings' },
 ]
 

@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json()
+  const { teamName, password } = await req.json()
 
-  if (!password || password !== process.env.APP_PASSWORD) {
-    return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+  if (!teamName || !password) {
+    return NextResponse.json({ error: 'Club name and password required' }, { status: 400 })
   }
 
-  const user = await prisma.user.findFirst()
-  if (!user) {
-    return NextResponse.json({ error: 'No user found' }, { status: 500 })
+  const user = await prisma.user.findFirst({
+    where: { teamName, isBot: false }
+  })
+
+  if (!user || !user.passwordHash) {
+    return NextResponse.json({ error: 'Invalid club name or password' }, { status: 401 })
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash)
+  if (!valid) {
+    return NextResponse.json({ error: 'Invalid club name or password' }, { status: 401 })
   }
 
   const session = await getSession()

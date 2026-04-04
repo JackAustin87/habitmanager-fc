@@ -73,6 +73,10 @@ model User {
   totalXp         Int      @default(0)
   spendableXp     Int      @default(0)
   currentSeasonXp Int      @default(0)
+  teamName        String?
+  passwordHash    String?
+  isBot           Boolean  @default(false)
+  botStrength     Int      @default(50)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -87,6 +91,10 @@ model User {
   mealLogs          MealLog[]
   checkIns          DailyCheckIn[]
   weeklyReports     WeeklyReport[]
+  leagueMatchesHome LeagueMatch[]      @relation("HomeTeam")
+  leagueMatchesAway LeagueMatch[]      @relation("AwayTeam")
+  cupMatchesHome    CupMatch[]         @relation("CupHomeTeam")
+  cupMatchesAway    CupMatch[]         @relation("CupAwayTeam")
 }
 
 model Credential {
@@ -267,4 +275,52 @@ model WeeklyReport {
   generatedAt          DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Season {
+  id        String   @id @default(uuid())
+  number    Int
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  leagueMatches LeagueMatch[]
+  cupMatches    CupMatch[]
+}
+
+model LeagueMatch {
+  id         String   @id @default(uuid())
+  seasonId   String
+  matchday   Int
+  matchDate  DateTime @db.Date
+  homeTeamId String
+  awayTeamId String
+  homeXp     Int?
+  awayXp     Int?
+  played     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  season   Season @relation(fields: [seasonId], references: [id])
+  homeTeam User   @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam User   @relation("AwayTeam", fields: [awayTeamId], references: [id])
+}
+
+model CupMatch {
+  id          String   @id @default(uuid())
+  seasonId    String
+  round       Int
+  matchNumber Int
+  matchWeek   Int
+  homeTeamId  String?
+  awayTeamId  String?
+  homeXp      Int?
+  awayXp      Int?
+  winnerId    String?
+  played      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  season   Season @relation(fields: [seasonId], references: [id])
+  homeTeam User?  @relation("CupHomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam User?  @relation("CupAwayTeam", fields: [awayTeamId], references: [id])
 }

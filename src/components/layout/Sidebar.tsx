@@ -8,6 +8,7 @@ const navItems = [
   { href: '/habits', label: 'Habits' },
   { href: '/calendar', label: 'Calendar' },
   { href: '/league', label: 'League Table' },
+  { href: '/cup', label: 'Cup' },
   { href: '/transfers', label: 'Transfer Market' },
   { href: '/nutrition', label: 'Nutrition' },
   { href: '/check-in', label: 'Check-In' },
