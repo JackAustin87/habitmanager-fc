@@ -58,3 +58,24 @@ self.addEventListener('fetch', (event) => {
     })
   )
 })
+
+// Phase 5: Push notification handlers
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+  var data = event.data.json();
+  var options = {
+    body: data.body || '',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    data: { url: data.url || '/' }
+  };
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'HabitManager FC', options)
+  );
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var url = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
+  event.waitUntil(clients.openWindow(url));
+});

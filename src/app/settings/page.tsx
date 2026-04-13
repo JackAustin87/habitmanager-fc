@@ -11,6 +11,13 @@ interface SettingsData {
   fatTarget: number
 }
 
+interface NotifSettings {
+  emailEnabled: boolean
+  pushEnabled: boolean
+  dailyReminderTime: string | null
+  weeklyDigestDay: number | null
+}
+
 const SECTION_STYLE: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.03)',
   border: '1px solid rgba(255,255,255,0.08)',
@@ -92,6 +99,10 @@ export default function SettingsPage() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  // Notification settings state
+  const [notifSettings, setNotifSettings] = useState<NotifSettings>({ emailEnabled: false, pushEnabled: false, dailyReminderTime: null, weeklyDigestDay: null })
+  const [notifSaveMsg, setNotifSaveMsg] = useState<string | null>(null)
+
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
@@ -105,6 +116,10 @@ export default function SettingsPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
+    fetch('/api/notifications/settings')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setNotifSettings(data) })
+      .catch(() => {})
   }, [])
 
   async function saveProfile() {
@@ -153,6 +168,24 @@ export default function SettingsPage() {
       return
     }
     window.alert('Nutrition targets saved.')
+  }
+
+  async function saveNotification(field: 'pushEnabled' | 'emailEnabled', value: boolean) {
+    const updated = { ...notifSettings, [field]: value }
+    setNotifSettings(updated)
+    const res = await fetch('/api/notifications/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    })
+    if (res.ok) {
+      setNotifSaveMsg('Saved.')
+      setTimeout(() => setNotifSaveMsg(null), 2000)
+    } else {
+      setNotifSettings(notifSettings)
+      setNotifSaveMsg('Failed to save.')
+      setTimeout(() => setNotifSaveMsg(null), 3000)
+    }
   }
 
   async function deleteAccount() {
@@ -304,54 +337,99 @@ export default function SettingsPage() {
       {/* Notifications Section */}
       <div style={SECTION_STYLE}>
         <h2 style={SECTION_TITLE_STYLE}>Notifications</h2>
-        <p style={{ color: '#718096', fontSize: '13px', marginBottom: '16px' }}>
-          Push notifications and email digests are coming in Phase 5.
-        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {['Daily reminder', 'Weekly digest'].map((label) => (
-            <div
-              key={label}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              borderRadius: '6px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <div>
+              <span style={{ color: '#e2e8f0', fontSize: '14px', display: 'block' }}>Push Notifications</span>
+              <span style={{ color: '#718096', fontSize: '12px' }}>Daily reminders and alerts on this device</span>
+            </div>
+            <button
+              onClick={() => saveNotification('pushEnabled', !notifSettings.pushEnabled)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 14px',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.06)',
+                width: '40px',
+                height: '22px',
+                backgroundColor: notifSettings.pushEnabled ? '#d69e2e' : '#2d3748',
+                borderRadius: '11px',
+                position: 'relative',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                flexShrink: 0,
               }}
             >
-              <span style={{ color: '#a0aec0', fontSize: '14px' }}>{label}</span>
               <div
                 style={{
-                  width: '40px',
-                  height: '22px',
-                  backgroundColor: '#2d3748',
-                  borderRadius: '11px',
-                  position: 'relative',
-                  opacity: 0.5,
-                  cursor: 'not-allowed',
+                  position: 'absolute',
+                  left: notifSettings.pushEnabled ? '21px' : '3px',
+                  top: '3px',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: '#fff',
+                  borderRadius: '50%',
+                  transition: 'left 0.2s',
                 }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '3px',
-                    top: '3px',
-                    width: '16px',
-                    height: '16px',
-                    backgroundColor: '#718096',
-                    borderRadius: '50%',
-                  }}
-                />
-              </div>
+              />
+            </button>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              borderRadius: '6px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <div>
+              <span style={{ color: '#e2e8f0', fontSize: '14px', display: 'block' }}>Weekly Email Digest</span>
+              <span style={{ color: '#718096', fontSize: '12px' }}>Summary of your progress sent weekly</span>
             </div>
-          ))}
+            <button
+              onClick={() => saveNotification('emailEnabled', !notifSettings.emailEnabled)}
+              style={{
+                width: '40px',
+                height: '22px',
+                backgroundColor: notifSettings.emailEnabled ? '#d69e2e' : '#2d3748',
+                borderRadius: '11px',
+                position: 'relative',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: notifSettings.emailEnabled ? '21px' : '3px',
+                  top: '3px',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: '#fff',
+                  borderRadius: '50%',
+                  transition: 'left 0.2s',
+                }}
+              />
+            </button>
+          </div>
         </div>
-        <p style={{ color: '#4a5568', fontSize: '11px', marginTop: '12px' }}>
-          Coming in Phase 5
-        </p>
+        {notifSaveMsg && (
+          <p style={{ color: '#68d391', fontSize: '12px', marginTop: '10px' }}>{notifSaveMsg}</p>
+        )}
       </div>
+
 
       {/* Apple Calendar (CalDAV) Section */}
       <div style={SECTION_STYLE}>
