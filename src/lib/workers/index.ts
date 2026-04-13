@@ -49,12 +49,12 @@ export async function startWorkers() {
     const { Resend } = await import('resend')
     const { prisma } = await import('../prisma')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const user = await prisma.user.findUnique({ where: { id: job.data.userId }, select: { totalXp: true, level: true, currentStreak: true } })
+    const user = await prisma.user.findUnique({ where: { id: job.data.userId }, select: { totalXp: true, level: true } })
     await resend.emails.send({
       from: 'HabitManager FC <noreply@fmhabittracker.cloud>',
       to: job.data.email,
       subject: 'Your Weekly HabitManager FC Digest',
-      html: `<h2>Weekly Summary</h2><p>XP: ${user?.totalXp ?? 0} | Level: ${user?.level ?? 1} | Streak: ${user?.currentStreak ?? 0} days</p>`
+      html: `<h2>Weekly Summary</h2><p>XP: ${user?.totalXp ?? 0} | Level: ${user?.level ?? 1}</p>`
     })
   }, { connection, autorun: true })
   weeklyWorker.on('error', (e) => console.error('[weekly-digest-worker]', e.message))
