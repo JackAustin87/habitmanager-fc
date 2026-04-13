@@ -37,12 +37,19 @@ interface DashboardData {
   stats: DashboardStats
 }
 
+interface DailyQuote {
+  text: string
+  author: string
+  bookTitle: string
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
   const [xpFlash, setXpFlash] = useState<{ id: string; xp: number } | null>(null)
   const [pendingQuantity, setPendingQuantity] = useState<string | null>(null)
   const [quantityInputs, setQuantityInputs] = useState<{ [id: string]: { q1: string; q2: string } }>({})
+  const [dailyQuote, setDailyQuote] = useState<DailyQuote | null>(null)
 
   const fetchDashboard = useCallback(async () => {
     const res = await fetch('/api/dashboard')
@@ -55,6 +62,15 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDashboard()
   }, [fetchDashboard])
+
+  useEffect(() => {
+    fetch('/api/quotes')
+      .then(r => r.json())
+      .then(data => {
+        if (data.text) setDailyQuote(data)
+      })
+      .catch(() => {})
+  }, [])
 
   async function handleComplete(habit: HabitItem, q1?: number, q2?: number) {
     if (habit.completedToday || completing === habit.id) return
@@ -126,6 +142,14 @@ export default function DashboardPage() {
         <StatPanel label="Remaining" value={String(data.stats.remainingToday)} />
         <StatPanel label="Total XP" value={String(data.user.xp)} />
       </div>
+
+      {dailyQuote && (
+        <div className="bg-blue-900/20 border border-blue-700/30 rounded p-4">
+          <div className="text-fm-gold text-xs font-bold uppercase tracking-wide mb-2">Manager&apos;s Quote of the Day</div>
+          <p className="text-white text-sm italic leading-relaxed">&ldquo;{dailyQuote.text}&rdquo;</p>
+          <p className="text-blue-400 text-xs mt-1">&mdash; {dailyQuote.author}, <span className="text-blue-300">{dailyQuote.bookTitle}</span></p>
+        </div>
+      )}
 
       <div className="bg-blue-900/20 border border-blue-700/30 rounded">
         <div className="bg-blue-900/60 px-4 py-2 border-b border-blue-700/50">

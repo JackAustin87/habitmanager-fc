@@ -95,6 +95,7 @@ model User {
   leagueMatchesAway LeagueMatch[]      @relation("AwayTeam")
   cupMatchesHome    CupMatch[]         @relation("CupHomeTeam")
   cupMatchesAway    CupMatch[]         @relation("CupAwayTeam")
+  rewardPurchases   RewardPurchase[]
 }
 
 model Credential {
@@ -323,4 +324,33 @@ model CupMatch {
   season   Season @relation(fields: [seasonId], references: [id])
   homeTeam User?  @relation("CupHomeTeam", fields: [homeTeamId], references: [id])
   awayTeam User?  @relation("CupAwayTeam", fields: [awayTeamId], references: [id])
+}
+
+model GlobalQuote {
+  id        String   @id @default(uuid())
+  text      String   @unique
+  author    String
+  bookTitle String
+  createdAt DateTime @default(now())
+}
+
+model RewardCatalogItem {
+  id             String           @id @default(uuid())
+  name           String           @unique
+  description    String
+  xpCost         Int
+  effectType     String
+  effectDuration Int
+  isActive       Boolean          @default(true)
+  purchases      RewardPurchase[]
+}
+
+model RewardPurchase {
+  id                  String            @id @default(uuid())
+  userId              String
+  rewardCatalogItemId String
+  purchasedAt         DateTime          @default(now())
+  spendableXpDeducted Int
+  user                User              @relation(fields: [userId], references: [id])
+  rewardCatalogItem   RewardCatalogItem @relation(fields: [rewardCatalogItemId], references: [id])
 }

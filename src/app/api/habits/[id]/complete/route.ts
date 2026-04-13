@@ -62,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     data: {
       totalXp: { increment: xpEarned },
       currentSeasonXp: { increment: xpEarned },
+      spendableXp: { increment: xpEarned },
     },
   })
 
