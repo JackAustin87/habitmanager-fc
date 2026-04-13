@@ -78,8 +78,9 @@ export default function CalendarPage() {
   const totalCells = offset + daysInMonth
   const rows = Math.ceil(totalCells / 7)
 
-  const completionsForDay = (day: number): CompletionEntry[] =>
-    data?.days[String(day)] ?? []
+  function completionsForDay(day: number): CompletionEntry[] {
+    return data?.days[String(day)] ?? []
+  }
 
   const hasAnyCompletions = data && Object.keys(data.days).length > 0
 
@@ -96,9 +97,9 @@ export default function CalendarPage() {
               background: 'none', border: '1px solid #2d3748', borderRadius: '4px',
               color: '#a0aec0', cursor: 'pointer', padding: '4px 10px', fontSize: '16px',
             }}
-            aria-label=Previous month
+            aria-label="Previous month"
           >
-            ‹
+            {'<'}
           </button>
           <span style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 600, minWidth: '120px', textAlign: 'center' }}>
             {MONTH_NAMES[month - 1]} {year}
@@ -109,9 +110,9 @@ export default function CalendarPage() {
               background: 'none', border: '1px solid #2d3748', borderRadius: '4px',
               color: '#a0aec0', cursor: 'pointer', padding: '4px 10px', fontSize: '16px',
             }}
-            aria-label=Next month
+            aria-label="Next month"
           >
-            ›
+            {'>'}
           </button>
         </div>
       </div>
@@ -140,7 +141,7 @@ export default function CalendarPage() {
           Loading...
         </div>
       ) : (
-        <>
+        <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
             {Array.from({ length: rows * 7 }).map((_, idx) => {
               const day = idx - offset + 1
@@ -170,7 +171,7 @@ export default function CalendarPage() {
                   }}
                 >
                   {isValid && (
-                    <>
+                    <div>
                       <div style={{
                         color: isTodayCell ? '#d69e2e' : '#a0aec0',
                         fontSize: '12px',
@@ -182,7 +183,7 @@ export default function CalendarPage() {
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
                         {completions.map((c, i) => (
                           <div
-                            key={`${c.habitId}-${i}`}
+                            key={c.habitId + '-' + i}
                             title={c.habitName}
                             style={{
                               width: '8px', height: '8px',
@@ -193,7 +194,7 @@ export default function CalendarPage() {
                           />
                         ))}
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               )
@@ -222,7 +223,7 @@ export default function CalendarPage() {
               ) : (
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {completionsForDay(selectedDay).map((c, i) => (
-                    <li key={`${c.habitId}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <li key={c.habitId + '-' + i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
                         width: '10px', height: '10px', borderRadius: '50%',
                         background: CATEGORY_COLORS[c.category] ?? '#718096',
@@ -241,7 +242,7 @@ export default function CalendarPage() {
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )
