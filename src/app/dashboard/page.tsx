@@ -94,6 +94,12 @@ export default function DashboardPage() {
         const result = await res.json()
         setXpFlash({ id: habit.id, xp: result.xpEarned })
         setTimeout(() => setXpFlash(null), 2000)
+        if (result.newLevel && result.previousLevel && result.newLevel > result.previousLevel) {
+          localStorage.setItem('hmfc_levelup', JSON.stringify({ 
+            newLevel: result.newLevel, 
+            previousLevel: result.previousLevel 
+          }))
+        }
         await fetchDashboard()
       }
     } finally {
