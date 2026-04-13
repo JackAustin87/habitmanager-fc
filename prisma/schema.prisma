@@ -64,6 +64,19 @@ enum BonusType {
   TARGET_EXCEEDED
   PERSONAL_BEST
 }
+enum TrophyType {
+  STREAK_7
+  STREAK_30
+  STREAK_90
+  STREAK_365
+  XP_1000
+  XP_10000
+  CUP_WINNER
+  LEAGUE_CHAMPION
+  HABIT_MASTER
+  FIRST_HABIT
+}
+
 
 model User {
   id              String   @id @default(uuid())
@@ -79,6 +92,10 @@ model User {
   botStrength     Int      @default(50)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  calorieTarget   Int      @default(2200)
+  proteinTarget   Int      @default(150)
+  carbsTarget     Int      @default(250)
+  fatTarget       Int      @default(65)
 
   credentials       Credential[]
   habits            Habit[]
@@ -96,6 +113,7 @@ model User {
   cupMatchesHome    CupMatch[]         @relation("CupHomeTeam")
   cupMatchesAway    CupMatch[]         @relation("CupAwayTeam")
   rewardPurchases   RewardPurchase[]
+  trophies          Trophy[]
 }
 
 model Credential {
@@ -353,4 +371,15 @@ model RewardPurchase {
   spendableXpDeducted Int
   user                User              @relation(fields: [userId], references: [id])
   rewardCatalogItem   RewardCatalogItem @relation(fields: [rewardCatalogItemId], references: [id])
+}
+
+model Trophy {
+  id        String     @id @default(uuid())
+  userId    String
+  type      TrophyType
+  awardedAt DateTime   @default(now())
+  metadata  Json?
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
 }

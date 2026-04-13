@@ -4,6 +4,12 @@ import { getSession } from '@/lib/auth'
 import { calculateHabitXp } from '@/lib/xp'
 import { BonusType } from '@prisma/client'
 
+const XP_PER_LEVEL = 500
+
+function calcLevel(totalXp: number): number {
+  return Math.floor(totalXp / XP_PER_LEVEL) + 1
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   if (!session.userId) {
@@ -57,6 +63,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
 
+  // Read current user to capture previousLevel before update
+  const userBefore = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { totalXp: true },
+  })
+  const previousLevel = calcLevel(userBefore?.totalXp ?? 0)
+
   const updatedUser = await prisma.user.update({
     where: { id: session.userId },
     data: {
@@ -66,11 +79,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
 
+  const newLevel = calcLevel(updatedUser.totalXp)
+
+  // Update stored level field if it changed
+  if (newLevel !== previousLevel) {
+    await prisma.user.update({
+      where: { id: session.userId },
+      data: { level: newLevel },
+    })
+  }
+
   return NextResponse.json({
     success: true,
     xpEarned,
     bonusType,
     totalXp: updatedUser.totalXp,
+    newLevel,
+    previousLevel,
     completion,
   })
 }
